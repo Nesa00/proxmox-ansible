@@ -1,0 +1,4 @@
+# System update and reboot
+reboot_system: false # Reboot the system after completing all playbooks.
+system_update_scheduler: false # Enable automatic system updates.
+update_schedule_time: "6:00" # Time to install updates (format: HH:MM).

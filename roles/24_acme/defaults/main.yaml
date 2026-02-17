@@ -1,0 +1,13 @@
+# ACME configuration
+acme_configure: false # Enable ACME certificate management.
+acme_account_type: "custom" # default, staging, custom
+acme_account_name: "example" # ACME account name in Proxmox.
+acme_email: "admin@example.com" # Email for ACME account registration.
+acme_directory: "https://acme-v02.api.letsencrypt.org/directory" # Let's Encrypt production directory.
+acme_staging_directory: "https://acme-staging-v02.api.letsencrypt.org/directory" # Let's Encrypt staging directory.
+acme_custom_directory: "https://ca.example.com:8443/acme/acme/directory" # Custom ACME CA directory URL.
+acme_plugin_id: "http01-local" # Plugin ID for ACME.
+acme_plugin_type: "standalone" # standalone (HTTP-01) or dns (DNS-01)
+acme_plugin_nodes: "pve-real" # Nodes for ACME plugin.
+acme_domain: "pve-real.example.com" # Domain for ACME certificate.
+acme_order_renew: true # Order or renew ACME certificate after configuration.

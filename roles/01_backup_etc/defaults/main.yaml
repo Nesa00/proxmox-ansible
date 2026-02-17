@@ -1,0 +1,2 @@
+# Backup /etc directory before changes
+backup_etc: true # Backup the /etc directory in Proxmox (backup will be available in the current Ansible directory).

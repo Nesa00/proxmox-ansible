@@ -1,0 +1,130 @@
+- name: Collect network topology information
+  block:
+    - name: Get network interfaces configuration
+      ansible.builtin.shell: |
+        echo "Network Interfaces:"
+        cat /etc/network/interfaces
+        echo ""
+        echo "Network Status:"
+        ip -o addr show
+      register: network_config
+      changed_when: false
+
+    - name: Get bridge information
+      ansible.builtin.shell: |
+        echo "Bridge Status:"
+        brctl show
+        echo ""
+        echo "Bridge Details:"
+        for bridge in $(brctl show | grep -v "bridge name" | awk '{print $1}'); do
+          echo "Bridge: $bridge"
+          brctl showstp $bridge
+          echo ""
+        done
+      register: bridge_info
+      changed_when: false
+      failed_when: false
+
+    - name: Get VM network information
+      ansible.builtin.shell: |
+        echo "VM Network Configuration:"
+        for vm in $(qm list | grep -v "VMID" | awk '{print $1}'); do
+          echo "VM $vm:"
+          qm config $vm | grep -E "(net|bridge)" || echo "  No network config"
+        done
+      register: vm_network_info
+      changed_when: false
+      when: include_vm_networks | default(true)
+
+    - name: Get storage network information
+      ansible.builtin.shell: |
+        echo "Storage Network Configuration:"
+        pvesm status | grep -E "(nfs|iscsi|ceph|glusterfs)"
+        echo ""
+        echo "Storage Network Details:"
+        for storage in $(pvesm status | grep -E "(nfs|iscsi|ceph|glusterfs)" | awk '{print $1}'); do
+          echo "Storage $storage:"
+          pvesm status $storage
+        done
+      register: storage_network_info
+      changed_when: false
+      when: include_storage_networks | default(true)
+
+- name: Generate network diagram in YAML format
+  when: (diagram_format | default("yaml")) == "yaml"
+  block:
+    - name: Create network topology YAML
+      ansible.builtin.template:
+        src: network_topology.yaml.j2
+        dest: "{{ documentation_path }}/network_topology.yaml"
+        mode: '0644'
+        owner: root
+        group: root
+
+    - name: Create network diagram YAML
+      ansible.builtin.template:
+        src: network_diagram.yaml.j2
+        dest: "{{ documentation_path }}/network_diagram.yaml"
+        mode: '0644'
+        owner: root
+        group: root
+
+- name: Generate network diagram in DOT format
+  when: (diagram_format | default("yaml")) == "dot"
+  block:
+    - name: Create network diagram DOT
+      ansible.builtin.template:
+        src: network_diagram.dot.j2
+        dest: "{{ documentation_path }}/network_diagram.dot"
+        mode: '0644'
+        owner: root
+        group: root
+
+    - name: Install Graphviz for DOT rendering
+      ansible.builtin.apt:
+        name: graphviz
+        state: present
+        update_cache: true
+      when: (diagram_format | default("yaml")) == "dot"
+
+    - name: Generate PNG from DOT
+      ansible.builtin.shell: dot -Tpng {{ documentation_path }}/network_diagram.dot -o {{ documentation_path }}/network_diagram.png
+      when: (diagram_format | default("yaml")) == "dot"
+
+- name: Generate network diagram in Mermaid format
+  when: (diagram_format | default("yaml")) == "mermaid"
+  block:
+    - name: Create network diagram Mermaid
+      ansible.builtin.template:
+        src: network_diagram.mmd.j2
+        dest: "{{ documentation_path }}/network_diagram.mmd"
+        mode: '0644'
+        owner: root
+        group: root
+
+- name: Save network information to files
+  block:
+    - name: Save network configuration
+      ansible.builtin.copy:
+        dest: "{{ documentation_path }}/network_config.txt"
+        content: |
+          Network Configuration:
+          {{ network_config.stdout }}
+          
+          Bridge Information:
+          {{ bridge_info.stdout | default('No bridge information available') }}
+        mode: '0644'
+
+    - name: Save VM network information
+      ansible.builtin.copy:
+        dest: "{{ documentation_path }}/vm_network_info.txt"
+        content: "{{ vm_network_info.stdout }}"
+        mode: '0644'
+      when: include_vm_networks | default(true)
+
+    - name: Save storage network information
+      ansible.builtin.copy:
+        dest: "{{ documentation_path }}/storage_network_info.txt"
+        content: "{{ storage_network_info.stdout }}"
+        mode: '0644'
+      when: include_storage_networks | default(true)

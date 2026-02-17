@@ -1,0 +1,10 @@
+# Mail configuration
+mail_configure: false # Enable mail relay configuration for Proxmox notifications.
+mail_relay_host: "mail.example.com" # SMTP relay hostname.
+mail_relay_port: "465" # SMTP port (465, 587, 25).
+mail_sasl_auth_enable: "yes" # Enable SASL authentication for SMTP.
+mail_username: "admin@example.com" # Username for SMTP auth.
+mail_root_email: "admin@example.com" # Send Proxmox notifications to this email.
+mail_password: "example*" # Password for SMTP auth.
+mail_send_test: true # Send test email after configuration.
+mail_test_recipient: "test@example.com" # Recipient for test email.

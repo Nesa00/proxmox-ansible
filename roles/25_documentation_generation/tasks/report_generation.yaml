@@ -1,0 +1,60 @@
+- name: Generate comprehensive report in Markdown
+  when: report_formats is defined and 'markdown' in report_formats
+  block:
+    - name: Create comprehensive report markdown
+      ansible.builtin.template:
+        src: comprehensive_report.md.j2
+        dest: "{{ documentation_path }}/comprehensive_report.md"
+        mode: '0644'
+        owner: root
+        group: root
+
+- name: Generate comprehensive report in HTML
+  when: report_formats is defined and 'html' in report_formats
+  block:
+    - name: Create comprehensive report HTML
+      ansible.builtin.template:
+        src: comprehensive_report.html.j2
+        dest: "{{ documentation_path }}/comprehensive_report.html"
+        mode: '0644'
+        owner: root
+        group: root
+
+
+
+- name: Create comprehensive report index
+  ansible.builtin.template:
+    src: report_index.md.j2
+    dest: "{{ documentation_path }}/README.md"
+    mode: '0644'
+    owner: root
+    group: root
+
+- name: Copy documentation to local system
+  when: local_documentation_path is defined
+  block:
+    - name: Ensure local documentation directory exists
+      ansible.builtin.file:
+        path: "{{ local_documentation_path }}"
+        state: directory
+        mode: '0755'
+    
+    - name: Copy comprehensive report markdown
+      ansible.builtin.fetch:
+        src: "{{ documentation_path }}/comprehensive_report.md"
+        dest: "{{ local_documentation_path }}/"
+        flat: true
+      when: report_formats is defined and 'markdown' in report_formats
+    
+    - name: Copy comprehensive report HTML
+      ansible.builtin.fetch:
+        src: "{{ documentation_path }}/comprehensive_report.html"
+        dest: "{{ local_documentation_path }}/"
+        flat: true
+      when: report_formats is defined and 'html' in report_formats
+    
+    - name: Copy README index
+      ansible.builtin.fetch:
+        src: "{{ documentation_path }}/README.md"
+        dest: "{{ local_documentation_path }}/"
+        flat: true

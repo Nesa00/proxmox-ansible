@@ -1,0 +1,2 @@
+# Nginx reverse proxy
+nginx_enable: false # Install and enable Nginx.

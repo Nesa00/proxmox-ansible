@@ -1,0 +1,4 @@
+# ZFS ARC configuration
+set_zfs_arc: false # Enable custom ZFS ARC size limits.
+zfs_arc_min: 1 # Minimum ARC size in GB.
+zfs_arc_max: 1 # Maximum ARC size in GB.

@@ -1,0 +1,2 @@
+# Fail2Ban security
+fail2ban_enable: false # Install and enable Fail2Ban for security.

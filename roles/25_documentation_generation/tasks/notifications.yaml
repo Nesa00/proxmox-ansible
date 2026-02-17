@@ -1,0 +1,215 @@
+- name: Send email notification
+  when: (notify_on_completion | default(false)) and (notification_email | default("")) != ""
+  block:
+    - name: Install mail utilities
+      ansible.builtin.apt:
+        name: mailutils
+        state: present
+        update_cache: true
+
+    - name: Create notification email content
+      ansible.builtin.copy:
+        dest: "{{ documentation_path }}/notification_email.txt"
+        content: |
+          Subject: Proxmox Documentation Generation Complete
+          
+          Hello,
+          
+          The automatic documentation generation for your Proxmox server has been completed successfully.
+          
+          Server Details:
+          - Hostname: {{ inventory_hostname }}
+          - IP Address: {{ ansible_default_ipv4.address | default('Unknown') }}
+          - Generation Date: {{ ansible_date_time.iso8601 }}
+          
+          Generated Reports:
+          - Comprehensive Report (Markdown + HTML)
+          
+          Documentation Location: {{ documentation_path }}
+          
+          This is an automated message from your Proxmox Ansible playbook.
+          
+          Best regards,
+          Proxmox Documentation System
+        mode: '0644'
+        owner: root
+        group: root
+
+    - name: Send email with Markdown report
+      when: email_format == "markdown" or email_format == "both"
+      ansible.builtin.shell: |
+        {
+          echo "Subject: Proxmox Documentation Generation Complete - {{ inventory_hostname }}"
+          echo "Content-Type: text/plain; charset=utf-8"
+          echo ""
+          echo "Hello,"
+          echo ""
+          echo "The automatic documentation generation for your Proxmox server has been completed successfully."
+          echo ""
+          echo "Server Details:"
+          echo "- Hostname: {{ inventory_hostname }}"
+          echo "- IP Address: {{ ansible_default_ipv4.address | default('Unknown') }}"
+          echo "- Generation Date: {{ ansible_date_time.iso8601 }}"
+          echo ""
+          echo "Generated Reports:"
+          echo "- Comprehensive Report (Markdown + HTML)"
+          echo ""
+          echo "Documentation Location: {{ documentation_path }}"
+          echo ""
+          echo "=== COMPREHENSIVE REPORT ==="
+          echo ""
+          if [ -f "{{ documentation_path }}/comprehensive_report.md" ]; then
+            cat "{{ documentation_path }}/comprehensive_report.md"
+          else
+            echo "Report file not found. Please check the documentation path."
+          fi
+          echo ""
+          echo "=== END REPORT ==="
+          echo ""
+          echo "This is an automated message from your Proxmox Ansible playbook."
+          echo ""
+          echo "Best regards,"
+          echo "Proxmox Documentation System"
+        } | mail -s "Proxmox Documentation Generation Complete - {{ inventory_hostname }}" {{ notification_email }}
+      changed_when: false
+
+    - name: Send email with HTML report
+      when: email_format == "html" or email_format == "both"
+      ansible.builtin.shell: |
+        {
+          echo "Subject: Proxmox Documentation Generation Complete - {{ inventory_hostname }}"
+          echo "Content-Type: text/html; charset=utf-8"
+          echo ""
+          echo "<!DOCTYPE html>"
+          echo "<html>"
+          echo "<head>"
+          echo "  <meta charset='utf-8'>"
+          echo "  <title>Proxmox Documentation Report</title>"
+          echo "  <style>"
+          echo "    body { font-family: Arial, sans-serif; margin: 20px; }"
+          echo "    .header { background: #f0f0f0; padding: 20px; border-radius: 5px; }"
+          echo "    .report { background: #f9f9f9; padding: 20px; margin: 20px 0; border-left: 4px solid #007cba; }"
+          echo "    .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; }"
+          echo "  </style>"
+          echo "</head>"
+          echo "<body>"
+          echo "  <div class='header'>"
+          echo "    <h1>Proxmox Documentation Generation Complete</h1>"
+          echo "    <p><strong>Server:</strong> {{ inventory_hostname }}</p>"
+          echo "    <p><strong>IP Address:</strong> {{ ansible_default_ipv4.address | default('Unknown') }}</p>"
+          echo "    <p><strong>Date:</strong> {{ ansible_date_time.iso8601 }}</p>"
+          echo "  </div>"
+          echo "  <div class='report'>"
+          if [ -f "{{ documentation_path }}/comprehensive_report.html" ]; then
+            cat "{{ documentation_path }}/comprehensive_report.html"
+          else
+            echo "<p><strong>Report file not found.</strong> Please check the documentation path.</p>"
+          fi
+          echo "  </div>"
+          echo "  <div class='footer'>"
+          echo "    <p>This is an automated message from your Proxmox Ansible playbook.</p>"
+          echo "    <p>Best regards,<br>Proxmox Documentation System</p>"
+          echo "  </div>"
+          echo "</body>"
+          echo "</html>"
+        } | mail -s "Proxmox Documentation Generation Complete - {{ inventory_hostname }}" {{ notification_email }}
+      changed_when: false
+
+
+
+- name: Send webhook notification
+  when: (notify_on_completion | default(false)) and (notification_webhook | default("")) != ""
+  block:
+    - name: Install curl
+      ansible.builtin.apt:
+        name: curl
+        state: present
+        update_cache: true
+
+    - name: Create webhook payload
+      ansible.builtin.copy:
+        dest: "{{ documentation_path }}/webhook_payload.json"
+        content: |
+          {
+            "text": "Proxmox Documentation Generation Complete",
+            "attachments": [
+              {
+                "color": "good",
+                "title": "Documentation Generated Successfully",
+                "fields": [
+                  {
+                    "title": "Server",
+                    "value": "{{ inventory_hostname }}",
+                    "short": true
+                  },
+                  {
+                    "title": "IP Address",
+                    "value": "{{ ansible_default_ipv4.address | default('Unknown') }}",
+                    "short": true
+                  },
+                  {
+                    "title": "Generation Date",
+                    "value": "{{ ansible_date_time.iso8601 }}",
+                    "short": false
+                  },
+                  {
+                    "title": "Generated Reports",
+                    "value": "Comprehensive Report (Markdown + HTML)",
+                    "short": false
+                  }
+                ],
+                "footer": "Proxmox Documentation System"
+              }
+            ]
+          }
+        mode: '0644'
+        owner: root
+        group: root
+
+    - name: Send webhook notification
+      ansible.builtin.shell: |
+        curl -X POST -H 'Content-type: application/json' \
+          --data @{{ documentation_path }}/webhook_payload.json \
+          {{ notification_webhook }}
+      changed_when: false
+
+- name: Create notification log
+  when: notify_on_completion | default(false)
+  block:
+    - name: Log notification details
+      ansible.builtin.copy:
+        dest: "{{ documentation_path }}/notification.log"
+        content: |
+          Notification Log
+          ================
+          Date: {{ ansible_date_time.iso8601 }}
+          Host: {{ inventory_hostname }}
+          
+          Notifications Sent:
+          {% if notification_email != "" %}
+          - Email: {{ notification_email }} (Format: {{ email_format | default('markdown') }})
+          {% endif %}
+          {% if notification_webhook != "" %}
+          - Webhook: {{ notification_webhook }}
+          {% endif %}
+          
+          Generated Reports:
+          - Comprehensive Report: comprehensive_report.md
+          - Comprehensive Report: comprehensive_report.html
+          
+          Documentation Path: {{ documentation_path }}
+          Local Copy Path: {{ local_documentation_path | default('Not specified') }}
+        mode: '0644'
+        owner: root
+        group: root
+
+- name: Create completion summary
+  when: notify_on_completion | default(false)
+  block:
+    - name: Generate completion summary
+      ansible.builtin.template:
+        src: completion_summary.md.j2
+        dest: "{{ documentation_path }}/completion_summary.md"
+        mode: '0644'
+        owner: root
+        group: root

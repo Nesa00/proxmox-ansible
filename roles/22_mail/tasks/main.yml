@@ -111,7 +111,9 @@
   when: mail_configure | bool
 
 - name: Send test email
-  ansible.builtin.shell: echo "Test mail from Proxmox {{ ansible_hostname }}" | mail -s "Test from Proxmox" {{ mail_test_recipient }}
+  ansible.builtin.shell: |
+    set -o pipefail
+    echo "Test mail from Proxmox {{ ansible_hostname }}" | mail -s "Test from Proxmox" {{ mail_test_recipient }}
   when: mail_configure | bool and mail_send_test | bool
   changed_when: false
   register: test_mail_result

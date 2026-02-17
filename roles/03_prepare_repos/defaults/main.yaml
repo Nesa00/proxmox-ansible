@@ -1,0 +1,3 @@
+# Repository management
+add_backports_repo: false # Add or remove the Debian backports repository.
+add_pvetest_repo: false # Add or remove the Proxmox test repository.

@@ -5,6 +5,16 @@ This playbook is designed to automate the configuration, optimization, and manag
 
 ---
 
+## v1.2.0
+
+### Integration
+- Added support for [**StarGate**](https://github.com/yokozu777/StarGate) — a self-hosted Infrastructure Automation Platform that brings structure, scale, and visibility to Ansible-based IaC.
+
+### New Roles
+- **25_documentation_generation** — automatic documentation generation with system reports, network diagrams, security audit, and configuration export (Markdown and HTML formats).
+
+---
+
 ## v1.1.0
 
 ### Improvements

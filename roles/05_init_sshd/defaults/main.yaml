@@ -1,0 +1,5 @@
+# SSH configuration
+change_default_ssh_port: false # Enable changing the default SSH port.
+new_ssh_port: 22 # Specify the new SSH port.
+disable_root_login: false # Disable root login via SSH.
+disable_password_auth: false # Disable password-based SSH authentication.

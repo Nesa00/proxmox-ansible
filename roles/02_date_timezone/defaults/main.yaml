@@ -1,0 +1,5 @@
+# Timezone and NTP configuration
+timezone: Europe/Berlin # Set the system timezone.
+ntp_servers:
+  - 2.pfsense.pool.ntp.org # Primary NTP server.
+  - 1.pfsense.pool.ntp.org # Tertiary NTP server.

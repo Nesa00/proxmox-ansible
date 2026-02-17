@@ -1,0 +1,3 @@
+# RAM disk storage
+create_ramfs: false # Enable or disable creating a RAM disk.
+ramfs_size: 1000m # RAM disk size (e.g., 200000m for 200GB).

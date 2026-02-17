@@ -1,0 +1,62 @@
+# System preparation - hostname, network, kernel, services, locales
+set_hostname: pve-73 # Hostname for the Proxmox server.
+set_hostname_fqdn: pve-73.contoso.local # Fully Qualified Domain Name (FQDN).
+configure_network: false # Enable custom network configuration.
+network_config: | # Content for /etc/network/interfaces.
+  auto lo
+  iface lo inet loopback
+
+  iface ens18 inet manual
+
+  auto vmbr0
+  iface vmbr0 inet static
+          address 192.168.1.83/24
+          gateway 192.168.1.1
+          bridge-ports ens18
+          bridge-stp off
+          bridge-fd 0
+
+dns_servers:
+  - 8.8.8.8 # Primary DNS server.
+  - 8.8.4.4 # Secondary DNS server.
+
+disable_ipv6: true # Disable IPv6 on the system.
+change_smt: false # Enable or disable Hyper-Threading.
+smt: off # Specify "on" or "off" for Hyper-Threading.
+pstate_performance: true # Enable P-State performance tuning.
+amd_pstate: active # AMD P-State mode (e.g., active, guided).
+intel_pstate: active # Intel P-State mode (e.g., active, passive).
+scaling_governor: performance # CPU scaling governor (e.g., schedutil, performance, powersave). Please check available modes before use.
+default_kernel_params: > # Additional kernel boot parameters.
+  quiet pcie_aspm=off intremap=no_x2apic_optout iommu=pt
+  pcie_acs_override=downstream,multifunction pcie_port_pm=off
+  nvme_core.default_ps_max_latency_us=0
+
+services_to_disable:
+  - name: lxc # LXC service.
+    disable: false
+  - name: spiceproxy # SPICE Proxy service.
+    disable: false
+  - name: pve-ha-crm # Proxmox HA Cluster Manager service.
+    disable: false
+  - name: pve-ha-lrm # Proxmox HA Local Resource Manager service.
+    disable: false
+  - name: lxc-monitord # LXC Monitoring Daemon.
+    disable: false
+  - name: lxc-net # LXC Network service.
+    disable: false
+  - name: lxcfs # LXC File System.
+    disable: false
+  - name: pve-lxc-syscalld # PVE LXC syscall daemon. Do not disable this.
+    disable: false
+  - name: corosync # Corosync Cluster Engine.
+    disable: false
+  - name: iscsid # iSCSI initiator daemon.
+    disable: false
+
+add_locales: false # Enable adding or modifying system locales.
+default_locale: "en_US.UTF-8" # Default system locale.
+additional_locales:
+  - "en_US.UTF-8 UTF-8" # Additional locales to generate.
+
+apparmor_disable: false # Disable AppArmor.

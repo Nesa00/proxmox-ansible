@@ -1,0 +1,11 @@
+# Automatic documentation generation with Dracula theme optimization
+documentation_generation_enabled: true # Enable automatic documentation generation.
+
+# Report formats
+report_formats: # Output formats for generated reports.
+  - markdown
+  - html
+
+# Documentation paths
+documentation_path: "/opt/proxmox-docs" # Remote path for documentation on Proxmox host.
+local_documentation_path: "./docs/{{ inventory_hostname }}" # Local path to copy documentation to.

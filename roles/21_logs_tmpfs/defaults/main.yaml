@@ -1,0 +1,5 @@
+# Logs on tmpfs (RAM disk)
+move_logs_tmpfs: false # Enable moving logs to tmpfs (RAM disk).
+tmpfs_logs_size: "400M" # RAM disk size for general logs.
+tmpfs_logs_nginx_size: "400M" # RAM disk size for Nginx logs.
+tmpfs_logs_pveproxy_size: "400M" # RAM disk size for PVE Proxy logs.

@@ -106,6 +106,10 @@
       ansible.builtin.include_role:
         name: 99_update_reboot
 
+    - name: Generate documentation
+      ansible.builtin.include_role:
+        name: 25_documentation_generation
+        
   handlers:
     - name: Update GRUB
       ansible.builtin.command: update-grub

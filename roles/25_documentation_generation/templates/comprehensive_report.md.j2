@@ -1,0 +1,594 @@
+# Comprehensive Proxmox System Report - {{ inventory_hostname }}
+
+**Generated:** {{ ansible_date_time.iso8601 }}  
+**Hostname:** {{ inventory_hostname }}  
+**IP Address:** {{ ansible_default_ipv4.address | default('Unknown') }}
+
+---
+
+## Table of Contents
+
+1. [System Overview](#system-overview)
+2. [Hardware Information](#hardware-information)
+3. [Operating System](#operating-system)
+4. [Proxmox Information](#proxmox-information)
+5. [Repository Information](#repository-information)
+6. [System Processes and Services](#system-processes-and-services)
+7. [System Logs](#system-logs)
+8. [Users and Groups](#users-and-groups)
+9. [Scheduled Tasks](#scheduled-tasks)
+10. [Kernel Modules](#kernel-modules)
+11. [Network Connections and Routing](#network-connections-and-routing)
+12. [Firewall and Security](#firewall-and-security)
+13. [Storage and Filesystems (Detailed)](#storage-and-filesystems-detailed)
+14. [Performance Metrics (Detailed)](#performance-metrics-detailed)
+15. [Virtualization (Detailed)](#virtualization-detailed)
+16. [Software Packages (Detailed)](#software-packages-detailed)
+17. [System Configuration (Detailed)](#system-configuration-detailed)
+18. [Monitoring and Automation](#monitoring-and-automation)
+19. [Boot Loader and System Initialization](#boot-loader-and-system-initialization)
+20. [CPU and Hardware (Detailed)](#cpu-and-hardware-detailed)
+21. [System Configuration and Parameters](#system-configuration-and-parameters)
+22. [Network Configuration (Detailed)](#network-configuration-detailed)
+23. [ZFS and Storage (Detailed)](#zfs-and-storage-detailed)
+24. [Virtualization and KVM (Detailed)](#virtualization-and-kvm-detailed)
+25. [Security and Authentication (Detailed)](#security-and-authentication-detailed)
+26. [Web Services and Interface (Detailed)](#web-services-and-interface-detailed)
+27. [System Maintenance and Automation (Detailed)](#system-maintenance-and-automation-detailed)
+28. [Certificates and Mail (Detailed)](#certificates-and-mail-detailed)
+29. [Storage Information](#storage-information)
+20. [Network Information](#network-information)
+21. [Virtual Machines](#virtual-machines)
+22. [System Services](#system-services)
+23. [Performance Metrics](#performance-metrics)
+24. [Security Status](#security-status)
+25. [Security Audit](#security-audit)
+26. [Configuration Export](#configuration-export)
+27. [Network Diagrams](#network-diagrams)
+28. [Recommendations](#recommendations)
+
+---
+
+## System Overview
+
+### Basic System Information
+- **Hostname:** {{ inventory_hostname }}
+- **IP Address:** {{ ansible_default_ipv4.address | default('Unknown') }}
+- **Generated:** {{ ansible_date_time.iso8601 }}
+
+---
+
+## Hardware Information
+
+### CPU Information
+- **CPU Model:** {{ ansible_processor[1] | default('Unknown') }}
+- **CPU Cores:** {{ ansible_processor_cores | default('Unknown') }}
+- **CPU Threads:** {{ ansible_processor_threads | default('Unknown') }}
+- **Architecture:** {{ ansible_architecture | default('Unknown') }}
+
+### Memory Information
+- **Total RAM:** {{ (ansible_memtotal_mb / 1024) | round(1) if ansible_memtotal_mb is defined else 'Unknown' }} GB
+- **Available RAM:** {{ (ansible_memavailable_mb / 1024) | round(1) if ansible_memavailable_mb is defined else 'Unknown' }} GB
+- **Swap Usage:** {{ (ansible_swaptotal_mb / 1024) | round(1) if ansible_swaptotal_mb is defined else 'Unknown' }} GB
+
+---
+
+## Operating System
+
+### OS Details
+- **OS:** {{ ansible_distribution }} {{ ansible_distribution_version }}
+- **Kernel:** {{ ansible_kernel }}
+- **Boot Mode:** {{ global_boot_mode | default('Unknown') }}
+
+---
+
+## Proxmox Information
+
+### Proxmox Status
+- **Proxmox Version:** {{ proxmox_pve_major | default('Unknown') }}
+- **Node Status:** {{ 'Active' if cluster_status is defined else 'Standalone' }}
+
+---
+
+## System Configuration
+
+### Repository Information
+```
+{{ repository_info.stdout | default('Repository information not available') | strip_ansi }}
+```
+
+### DNS Configuration
+```
+{{ dns_info.stdout | default('DNS information not available') | strip_ansi }}
+```
+
+### ACME Configuration
+```
+{{ acme_info.stdout | default('ACME information not available') | strip_ansi }}
+```
+
+### Time and NTP Configuration
+```
+{{ time_info.stdout | default('Time and NTP information not available') | strip_ansi }}
+```
+
+---
+
+## System Processes and Services
+
+### Processes and Services Information
+```
+{{ processes_info.stdout | default('Processes and services information not available') | strip_ansi }}
+```
+
+---
+
+## System Logs
+
+### Logs Information
+```
+{{ logs_info.stdout | default('System logs information not available') | strip_ansi }}
+```
+
+---
+
+## Users and Groups
+
+### Users and Groups Information
+```
+{{ users_info.stdout | default('Users and groups information not available') | strip_ansi }}
+```
+
+---
+
+## Scheduled Tasks
+
+### Cron and Timer Information
+```
+{{ cron_info.stdout | default('Scheduled tasks information not available') | strip_ansi }}
+```
+
+---
+
+## Kernel Modules
+
+### Kernel Modules Information
+```
+{{ modules_info.stdout | default('Kernel modules information not available') | strip_ansi }}
+```
+
+---
+
+## Network Connections and Routing
+
+### Network Connections Information
+```
+{{ network_connections_info.stdout | default('Network connections information not available') | strip_ansi }}
+```
+
+---
+
+## Firewall and Security
+
+### Firewall and Security Information
+```
+{{ firewall_info.stdout | default('Firewall and security information not available') | strip_ansi }}
+```
+
+---
+
+## Storage and Filesystems (Detailed)
+
+### Detailed Storage Information
+```
+{{ storage_detailed_info.stdout | default('Detailed storage information not available') | strip_ansi }}
+```
+
+---
+
+## Performance Metrics (Detailed)
+
+### Detailed Performance Information
+```
+{{ performance_info.stdout | default('Detailed performance metrics information not available') | strip_ansi }}
+```
+
+---
+
+## Virtualization (Detailed)
+
+### Detailed Virtualization Information
+```
+{{ virtualization_detailed_info.stdout | default('Detailed virtualization information not available') | strip_ansi }}
+```
+
+---
+
+## Software Packages (Detailed)
+
+### Detailed Package Information
+```
+{{ packages_detailed_info.stdout | default('Detailed package information not available') | strip_ansi }}
+```
+
+---
+
+## System Configuration (Detailed)
+
+### Detailed Configuration Information
+```
+{{ config_detailed_info.stdout | default('Detailed configuration information not available') | strip_ansi }}
+```
+
+---
+
+## Monitoring and Automation
+
+### Monitoring and Automation Information
+```
+{{ monitoring_info.stdout | default('Monitoring and automation information not available') | strip_ansi }}
+```
+
+---
+
+## Boot Loader and System Initialization
+
+### Boot and Initialization Information
+```
+{{ boot_info.stdout | default('Boot and initialization information not available') | strip_ansi }}
+```
+
+---
+
+## CPU and Hardware (Detailed)
+
+### Detailed CPU and Hardware Information
+```
+{{ cpu_hardware_info.stdout | default('Detailed CPU and hardware information not available') | strip_ansi }}
+```
+
+---
+
+## System Configuration and Parameters
+
+### System Configuration Details
+```
+{{ system_config_info.stdout | default('System configuration details not available') | strip_ansi }}
+```
+
+---
+
+## Network Configuration (Detailed)
+
+### Detailed Network Configuration
+```
+{{ network_config_info.stdout | default('Detailed network configuration not available') | strip_ansi }}
+```
+
+---
+
+## ZFS and Storage (Detailed)
+
+### Detailed ZFS and Storage Configuration
+```
+{{ zfs_storage_info.stdout | default('Detailed ZFS and storage configuration not available') | strip_ansi }}
+```
+
+---
+
+## Virtualization and KVM (Detailed)
+
+### Detailed Virtualization Information
+```
+{{ virtualization_info.stdout | default('Detailed virtualization information not available') | strip_ansi }}
+```
+
+---
+
+## Security and Authentication (Detailed)
+
+### Detailed Security Information
+```
+{{ security_auth_info.stdout | default('Detailed security information not available') | strip_ansi }}
+```
+
+---
+
+## Web Services and Interface (Detailed)
+
+### Detailed Web Services Information
+```
+{{ web_services_info.stdout | default('Detailed web services information not available') | strip_ansi }}
+```
+
+---
+
+## System Maintenance and Automation (Detailed)
+
+### Detailed Maintenance Information
+```
+{{ maintenance_automation_info.stdout | default('Detailed maintenance information not available') | strip_ansi }}
+```
+
+---
+
+## Certificates and Mail (Detailed)
+
+### Detailed Certificates and Mail Information
+```
+{{ certificates_mail_info.stdout | default('Detailed certificates and mail information not available') | strip_ansi }}
+```
+
+---
+
+## Storage Information
+
+### Disk Usage
+```
+{{ disk_info.stdout | default('Disk information not available') | strip_ansi }}
+```
+
+### ZFS Status
+```
+{{ zfs_status.stdout | default('ZFS information not available') | strip_ansi }}
+```
+
+---
+
+## Network Information
+
+### Network Interfaces
+```
+{{ network_info.stdout | default('Network information not available') | strip_ansi }}
+```
+
+### Network Configuration
+```
+{{ network_config.stdout | default('Network configuration not available') | strip_ansi }}
+```
+
+---
+
+## Virtual Machines
+
+### VM List
+```
+{{ vm_list.stdout | default('No VMs found') | strip_ansi }}
+```
+
+### Container List
+```
+{{ container_list.stdout | default('No containers found') | strip_ansi }}
+```
+
+---
+
+## System Services
+
+### Critical Services Status
+- **SSH:** {{ 'Running' if (ansible_facts.services['ssh.service'] is defined and ansible_facts.services['ssh.service'].state == 'running') or (ansible_facts.services['sshd.service'] is defined and ansible_facts.services['sshd.service'].state == 'running') else 'Stopped' }}
+- **Proxmox Proxy:** {{ 'Running' if (ansible_facts.services['pveproxy.service'] is defined and ansible_facts.services['pveproxy.service'].state == 'running') else 'Stopped' }}
+- **Proxmox Cluster:** {{ 'Running' if (ansible_facts.services['pve-cluster.service'] is defined and ansible_facts.services['pve-cluster.service'].state == 'running') else 'Stopped' }}
+
+---
+
+## Performance Metrics
+
+### CPU Performance
+- **Current Governor:** {{ scaling_governor | default('Unknown') }}
+- **P-State Mode:** {{ 'AMD: ' + amd_pstate if (global_cpu_vendor is defined and 'AuthenticAMD' in global_cpu_vendor) else 'Intel: ' + intel_pstate if (global_cpu_vendor is defined and 'GenuineIntel' in global_cpu_vendor) else 'Unknown' }}
+- **Hyper-Threading:** {{ 'Disabled' if (change_smt and smt == 'off') else 'Enabled' }}
+
+### Memory Performance
+- **KSM Status:** {{ 'Enabled' if not disable_ksmtuned else 'Disabled' }}
+- **KSM Threshold:** {{ KSM_THRES_COEF | default('Default') }}%
+- **KSM Monitor Interval:** {{ KSM_MONITOR_INTERVAL | default('Default') }}s
+
+---
+
+## Security Status
+
+### SSH Configuration
+- **SSH Port:** {{ new_ssh_port | default(22) }}
+- **Root Login:** {{ 'Disabled' if disable_root_login else 'Enabled' }}
+- **Password Auth:** {{ 'Disabled' if disable_password_auth else 'Enabled' }}
+
+### Security Packages
+- **Fail2Ban:** {{ 'Installed' if fail2ban_enable else 'Not Installed' }}
+- **AppArmor:** {{ 'Disabled' if apparmor_disable else 'Enabled' }}
+
+---
+
+## Security Audit
+
+{% if security_audit_enabled | default(true) %}
+{% if ssh_audit is defined and ssh_audit.stdout %}
+### SSH Security
+```
+{{ ssh_audit.stdout | strip_ansi }}
+```
+{% endif %}
+
+{% if ssh_key_audit is defined and ssh_key_audit.stdout %}
+### SSH Key Permissions
+```
+{{ ssh_key_audit.stdout | strip_ansi }}
+```
+{% endif %}
+
+{% if firewall_audit is defined and firewall_audit.stdout %}
+### Firewall Status
+```
+{{ firewall_audit.stdout | strip_ansi }}
+```
+{% endif %}
+
+{% if proxmox_firewall_audit is defined and proxmox_firewall_audit.stdout %}
+### Proxmox Firewall
+```
+{{ proxmox_firewall_audit.stdout | strip_ansi }}
+```
+{% endif %}
+
+{% if user_audit is defined and user_audit.stdout %}
+### User Security
+```
+{{ user_audit.stdout | strip_ansi }}
+```
+{% endif %}
+
+{% if proxmox_user_audit is defined and proxmox_user_audit.stdout %}
+### Proxmox Users
+```
+{{ proxmox_user_audit.stdout | strip_ansi }}
+```
+{% endif %}
+
+{% if service_audit is defined and service_audit.stdout %}
+### Critical Services
+```
+{{ service_audit.stdout | strip_ansi }}
+```
+{% endif %}
+
+{% if security_packages_audit is defined and security_packages_audit.stdout %}
+### Security Packages
+```
+{{ security_packages_audit.stdout | strip_ansi }}
+```
+{% endif %}
+{% else %}
+**Security Audit:** Not performed
+{% endif %}
+
+---
+
+## Configuration Export
+
+{% if export_configs_enabled | default(true) %}
+{% if proxmox_config is defined and proxmox_config.stdout %}
+### Proxmox Configuration
+```
+{{ proxmox_config.stdout | strip_ansi }}
+```
+{% endif %}
+
+{% if cluster_config is defined and cluster_config.stdout %}
+### Cluster Configuration
+```
+{{ cluster_config.stdout | strip_ansi }}
+```
+{% endif %}
+
+{% if storage_config is defined and storage_config.stdout %}
+### Storage Configuration
+```
+{{ storage_config.stdout | strip_ansi }}
+```
+{% endif %}
+
+{% if network_config is defined and network_config.stdout %}
+### Network Configuration
+```
+{{ network_config.stdout | strip_ansi }}
+```
+{% endif %}
+
+
+
+{% if storage_config_export is defined and storage_config_export.stdout %}
+### Storage Export
+```
+{{ storage_config_export.stdout | strip_ansi }}
+```
+{% endif %}
+
+{% if user_config is defined and user_config.stdout %}
+### User Configuration
+```
+{{ user_config.stdout | strip_ansi }}
+```
+{% endif %}
+
+{% if proxmox_user_config is defined and proxmox_user_config.stdout %}
+### Proxmox Users
+```
+{{ proxmox_user_config.stdout | strip_ansi }}
+```
+{% endif %}
+
+{% if system_config is defined and system_config.stdout %}
+### System Configuration
+```
+{{ system_config.stdout | strip_ansi }}
+```
+{% endif %}
+
+{% if kernel_config is defined and kernel_config.stdout %}
+### Kernel Configuration
+```
+{{ kernel_config.stdout | strip_ansi }}
+```
+{% endif %}
+{% else %}
+**Configuration Export:** Not enabled
+{% endif %}
+
+---
+
+## Network Diagrams
+
+{% if network_diagrams_enabled | default(true) %}
+{% if network_config is defined and network_config.stdout %}
+### Network Topology
+```
+{{ network_config.stdout | strip_ansi }}
+```
+{% endif %}
+
+{% if bridge_info is defined and bridge_info.stdout %}
+### Bridge Information
+```
+{{ bridge_info.stdout | strip_ansi }}
+```
+{% endif %}
+
+{% if (include_vm_networks | default(true)) and vm_network_info is defined and vm_network_info.stdout %}
+### VM Network Configuration
+```
+{{ vm_network_info.stdout | strip_ansi }}
+```
+{% endif %}
+
+{% if (include_storage_networks | default(true)) and storage_network_info is defined and storage_network_info.stdout %}
+### Storage Network Configuration
+```
+{{ storage_network_info.stdout | strip_ansi }}
+```
+{% endif %}
+{% else %}
+**Network Diagrams:** Not generated
+{% endif %}
+
+---
+
+## Recommendations
+
+### Performance
+- Consider enabling nested virtualization for development environments
+- Monitor ZFS ARC cache usage and adjust if necessary
+- Use RAM disks for high-frequency log files
+
+### Security
+- Regularly update security packages
+- Monitor SSH access logs
+- Consider implementing additional security measures
+
+### Maintenance
+- Schedule regular system updates
+- Monitor disk space usage
+- Backup critical configurations regularly
+
+---
+
+*This comprehensive report was automatically generated by the Proxmox Ansible playbook.*

@@ -1,0 +1,34 @@
+graph TB
+  %% Graph settings
+  classDef hostNode fill:#fff2cc,stroke:#d6b656,stroke-width:2px
+  classDef networkNode fill:#d5e8d4,stroke:#82b366,stroke-width:2px
+  classDef interfaceNode fill:#e1d5e7,stroke:#9673a6,stroke-width:1px
+  
+  %% Host node
+  host["{{ inventory_hostname }}<br/>{{ ansible_default_ipv4.address | default('Unknown') }}"]
+  class host hostNode
+  
+  {% if include_vm_networks | default(false) %}
+  %% VM Network
+  vm_network["VM Network<br/>Virtual Machine Network"]
+  class vm_network networkNode
+  host -->|Bridge| vm_network
+  {% endif %}
+  
+  {% if include_storage_networks | default(false) %}
+  %% Storage Network
+  storage_network["Storage Network<br/>Storage Configuration"]
+  class storage_network networkNode
+  host -->|Bridge| storage_network
+  {% endif %}
+  
+  %% Network interfaces
+  {% for interface in ansible_interfaces %}
+  interface_{{ loop.index }}["{{ interface }}"]
+  class interface_{{ loop.index }} interfaceNode
+  host -.->|Interface| interface_{{ loop.index }}
+  {% endfor %}
+  
+  %% Title
+  title["Network Topology - {{ inventory_hostname }}<br/>Generated: {{ ansible_date_time.iso8601 }}"]
+  class title hostNode

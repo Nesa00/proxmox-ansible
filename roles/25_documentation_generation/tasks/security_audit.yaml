@@ -1,0 +1,175 @@
+- name: Perform SSH security audit
+  when: audit_ssh_config | default(true)
+  block:
+    - name: Check SSH configuration
+      ansible.builtin.shell: |
+        echo "SSH Configuration Audit:"
+        echo "========================"
+        echo "SSH Port: $(grep -E '^Port' /etc/ssh/sshd_config | awk '{print $2}' || echo 'Default (22)')"
+        echo "Root Login: $(grep -E '^PermitRootLogin' /etc/ssh/sshd_config | awk '{print $2}' || echo 'Default')"
+        echo "Password Auth: $(grep -E '^PasswordAuthentication' /etc/ssh/sshd_config | awk '{print $2}' || echo 'Default')"
+        echo "Key Auth: $(grep -E '^PubkeyAuthentication' /etc/ssh/sshd_config | awk '{print $2}' || echo 'Default')"
+        echo "Empty Passwords: $(grep -E '^PermitEmptyPasswords' /etc/ssh/sshd_config | awk '{print $2}' || echo 'Default')"
+        echo "X11 Forwarding: $(grep -E '^X11Forwarding' /etc/ssh/sshd_config | awk '{print $2}' || echo 'Default')"
+        echo "Max Auth Tries: $(grep -E '^MaxAuthTries' /etc/ssh/sshd_config | awk '{print $2}' || echo 'Default')"
+        echo "Login Grace Time: $(grep -E '^LoginGraceTime' /etc/ssh/sshd_config | awk '{print $2}' || echo 'Default')"
+      register: ssh_audit
+      changed_when: false
+
+    - name: Check SSH key permissions
+      ansible.builtin.shell: |
+        echo ""
+        echo "SSH Key Permissions:"
+        echo "===================="
+        for key in /home/*/.ssh/authorized_keys; do
+          if [ -f "$key" ]; then
+            echo "Key: $key"
+            echo "  Owner: $(stat -c '%U:%G' $key)"
+            echo "  Permissions: $(stat -c '%a' $key)"
+          fi
+        done
+      register: ssh_key_audit
+      changed_when: false
+
+- name: Perform firewall rules audit
+  when: audit_firewall_rules | default(true)
+  block:
+    - name: Check iptables rules
+      ansible.builtin.shell: |
+        echo "Firewall Rules Audit:"
+        echo "====================="
+        echo "IPv4 Rules:"
+        iptables -L -n -v || echo "iptables not available"
+        echo ""
+        echo "IPv6 Rules:"
+        ip6tables -L -n -v 2>/dev/null || echo "ip6tables not available"
+      register: firewall_audit
+      changed_when: false
+
+    - name: Check Proxmox firewall
+      ansible.builtin.shell: |
+        echo ""
+        echo "Proxmox Firewall:"
+        echo "================="
+        pve-firewall status || echo "Proxmox firewall not available"
+      register: proxmox_firewall_audit
+      changed_when: false
+      failed_when: false
+
+- name: Perform user permissions audit
+  when: audit_user_permissions | default(true)
+  block:
+    - name: Check user accounts
+      ansible.builtin.shell: |
+        echo "User Accounts Audit:"
+        echo "===================="
+        echo "Local Users:"
+        cat /etc/passwd | grep -E ":/bin/bash$|:/bin/sh$" | cut -d: -f1,3,7
+        echo ""
+        echo "Users with UID 0:"
+        cat /etc/passwd | grep ":0:" | cut -d: -f1,3,7
+        echo ""
+        echo "Sudo Users:"
+        grep -E "^%sudo|^%wheel|^%admin" /etc/sudoers 2>/dev/null || echo "No sudo groups found"
+      register: user_audit
+      changed_when: false
+
+    - name: Check Proxmox users
+      ansible.builtin.shell: |
+        echo ""
+        echo "Proxmox Users:"
+        echo "=============="
+        pveum user list || echo "Proxmox user management not available"
+      register: proxmox_user_audit
+      changed_when: false
+      failed_when: false
+
+- name: Perform service status audit
+  when: audit_service_status | default(true)
+  block:
+    - name: Check critical services
+      ansible.builtin.shell: |
+        echo "Critical Services Audit:"
+        echo "======================="
+        echo "SSH Service:"
+        systemctl status ssh --no-pager -l || systemctl status sshd --no-pager -l
+        echo ""
+        echo "Proxmox Services:"
+        systemctl status pveproxy --no-pager -l
+        echo ""
+        systemctl status pve-cluster --no-pager -l
+        echo ""
+        echo "Network Services:"
+        systemctl status networking --no-pager -l
+        echo ""
+        echo "Storage Services:"
+        systemctl status zfs-import-cache --no-pager -l 2>/dev/null || echo "ZFS import cache not running"
+      register: service_audit
+      changed_when: false
+
+- name: Perform security package audit
+  block:
+    - name: Check security packages
+      ansible.builtin.shell: |
+        echo "Security Packages Audit:"
+        echo "======================="
+        echo "Fail2Ban: $(dpkg -l | grep fail2ban | awk '{print $2, $3}' || echo 'Not installed')"
+        echo "AppArmor: $(dpkg -l | grep apparmor | head -1 | awk '{print $2, $3}' || echo 'Not installed')"
+        echo "SELinux: $(dpkg -l | grep selinux | head -1 | awk '{print $2, $3}' || echo 'Not installed')"
+        echo "ClamAV: $(dpkg -l | grep clamav | head -1 | awk '{print $2, $3}' || echo 'Not installed')"
+        echo "Rkhunter: $(dpkg -l | grep rkhunter | awk '{print $2, $3}' || echo 'Not installed')"
+      register: security_packages_audit
+      changed_when: false
+
+- name: Save security audit results
+  block:
+    - name: Save SSH audit
+      ansible.builtin.copy:
+        dest: "{{ documentation_path }}/security_ssh_audit.txt"
+        content: |
+          {{ ssh_audit.stdout }}
+          
+          {{ ssh_key_audit.stdout }}
+        mode: '0644'
+      when: audit_ssh_config | default(true) | default(true)
+
+    - name: Save firewall audit
+      ansible.builtin.copy:
+        dest: "{{ documentation_path }}/security_firewall_audit.txt"
+        content: |
+          {{ firewall_audit.stdout }}
+          
+          {{ proxmox_firewall_audit.stdout | default('') }}
+        mode: '0644'
+      when: audit_firewall_rules | default(true) | default(true)
+
+    - name: Save user audit
+      ansible.builtin.copy:
+        dest: "{{ documentation_path }}/security_user_audit.txt"
+        content: |
+          {{ user_audit.stdout }}
+          
+          {{ proxmox_user_audit.stdout | default('') }}
+        mode: '0644'
+      when: audit_user_permissions | default(true) | default(true)
+
+    - name: Save service audit
+      ansible.builtin.copy:
+        dest: "{{ documentation_path }}/security_service_audit.txt"
+        content: "{{ service_audit.stdout }}"
+        mode: '0644'
+      when: audit_service_status | default(true) | default(true)
+
+    - name: Save security packages audit
+      ansible.builtin.copy:
+        dest: "{{ documentation_path }}/security_packages_audit.txt"
+        content: "{{ security_packages_audit.stdout }}"
+        mode: '0644'
+
+- name: Generate security summary report
+  ansible.builtin.template:
+    src: security_summary.md.j2
+    dest: "{{ documentation_path }}/security_summary.md"
+    mode: '0644'
+    owner: root
+    group: root

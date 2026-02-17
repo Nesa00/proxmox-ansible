@@ -1,0 +1,2 @@
+# Web interface temperature sensors
+web_show_temperatures: false # Display hardware temperatures in the Proxmox web interface.

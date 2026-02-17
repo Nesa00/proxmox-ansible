@@ -1,0 +1,31 @@
+digraph NetworkTopology {
+  // Graph settings
+  rankdir=TB;
+  node [shape=box, style=filled, fillcolor=lightblue];
+  edge [color=darkgreen];
+  
+  // Host node
+  host [label="{{ inventory_hostname }}\n{{ ansible_default_ipv4.address | default('Unknown') }}", fillcolor=lightyellow];
+  
+  {% if include_vm_networks | default(false) %}
+  // VM Network
+  vm_network [label="VM Network\nVirtual Machine Network", fillcolor=lightgreen];
+  host -> vm_network [label="Bridge"];
+  {% endif %}
+  
+  {% if include_storage_networks | default(false) %}
+  // Storage Network
+  storage_network [label="Storage Network\nStorage Configuration", fillcolor=lightcoral];
+  host -> storage_network [label="Bridge"];
+  {% endif %}
+  
+  // Network interfaces
+  {% for interface in ansible_interfaces %}
+  interface_{{ loop.index }} [label="{{ interface }}", shape=ellipse, fillcolor=lightgray];
+  host -> interface_{{ loop.index }} [style=dashed];
+  {% endfor %}
+  
+  // Title
+  labelloc="t";
+  label="Network Topology - {{ inventory_hostname }}\nGenerated: {{ ansible_date_time.iso8601 }}";
+}

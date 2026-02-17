@@ -1,0 +1,5 @@
+# Certificates configuration
+certificates_configure: false # Enable custom CA certificates installation.
+ca_certificate_url: "https://ca.example.com:8443/roots.pem" # If you use custom CA, you can specify the URL of the CA certificate.
+ca_certificate_name: "example.crt" # If you use custom CA, you can specify the name of the CA certificate.
+custom_certs_dir: "root_ca_certs" # custom root certificates directory in root project, certs will be in crt format

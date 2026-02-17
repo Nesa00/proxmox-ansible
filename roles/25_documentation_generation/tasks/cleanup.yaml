@@ -1,0 +1,119 @@
+- name: Clean up old documentation files
+  when: cleanup_old_reports
+  block:
+    - name: Find old documentation files
+      ansible.builtin.find:
+        paths: "{{ documentation_path }}"
+        age: "{{ reports_retention_days | default(30) }}d"
+        file_type: file
+        patterns:
+          - "*.txt"
+          - "*.md"
+          - "*.html"
+          - "*.yaml"
+          - "*.yml"
+          - "*.dot"
+          - "*.mmd"
+          - "*.png"
+      register: old_docs
+
+    - name: Remove old documentation files
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ old_docs.files }}"
+      when: old_docs.files | length > 0
+
+    - name: Clean up empty directories
+      ansible.builtin.shell: |
+        find {{ documentation_path }} -type d -empty -delete
+      changed_when: false
+
+- name: Archive old documentation
+  when: cleanup_old_reports and old_docs.files | length > 0
+  block:
+    - name: Create archive directory
+      ansible.builtin.file:
+        path: "{{ documentation_path }}/archive"
+        state: directory
+        mode: '0755'
+        owner: root
+        group: root
+
+    - name: Create timestamp for archive
+      ansible.builtin.shell: date +%Y%m%d_%H%M%S
+      register: archive_timestamp
+      changed_when: false
+
+    - name: Archive old files
+      ansible.builtin.shell: |
+        tar -czf {{ documentation_path }}/archive/old_docs_{{ archive_timestamp.stdout }}.tar.gz \
+          --files-from <(find {{ documentation_path }} -type f -mtime +{{ reports_retention_days | default(30) }} -name "*.txt" -o -name "*.md" -o -name "*.html" -o -name "*.yaml" -o -name "*.yml" -o -name "*.dot" -o -name "*.mmd" -o -name "*.png") 2>/dev/null || true
+      changed_when: false
+
+- name: Log cleanup operation
+  when: cleanup_old_reports
+  block:
+    - name: Create cleanup log
+      ansible.builtin.copy:
+        dest: "{{ documentation_path }}/cleanup.log"
+        content: |
+          Documentation Cleanup Log
+          =========================
+          Date: {{ ansible_date_time.iso8601 }}
+          Host: {{ inventory_hostname }}
+          Retention Days: {{ reports_retention_days | default(30) }}
+          Files Removed: {{ old_docs.files | length | default(0) }}
+          Archive Created: {{ 'Yes' if old_docs.files | length > 0 else 'No' }}
+          {% if old_docs.files | length > 0 %}
+          Archived Files:
+          {% for file in old_docs.files %}
+          - {{ file.path }}
+          {% endfor %}
+          {% endif %}
+        mode: '0644'
+        owner: root
+        group: root
+
+- name: Update documentation index after cleanup
+  when: cleanup_old_reports
+  block:
+    - name: Regenerate report index
+      ansible.builtin.template:
+        src: report_index.md.j2
+        dest: "{{ documentation_path }}/README.md"
+        mode: '0644'
+        owner: root
+        group: root
+
+    - name: Create cleanup summary
+      ansible.builtin.copy:
+        dest: "{{ documentation_path }}/cleanup_summary.md"
+        content: |
+          # Documentation Cleanup Summary
+          
+          **Date:** {{ ansible_date_time.iso8601 }}
+          **Host:** {{ inventory_hostname }}
+          **Retention Period:** {{ reports_retention_days | default(30) }} days
+          
+          ## Cleanup Results
+          
+          - **Files Removed:** {{ old_docs.files | length | default(0) }}
+          - **Archive Created:** {{ 'Yes' if old_docs.files | length > 0 else 'No' }}
+          - **Space Freed:** Calculated during next run
+          
+          ## Current Documentation Status
+          
+          The following documentation files are currently available:
+          
+          {% if old_docs.files | length > 0 %}
+          ### Recently Cleaned Files
+          {% for file in old_docs.files %}
+          - {{ file.path | basename }}
+          {% endfor %}
+          {% endif %}
+          
+          > **Note:** This summary is automatically generated after each cleanup operation.
+        mode: '0644'
+        owner: root
+        group: root

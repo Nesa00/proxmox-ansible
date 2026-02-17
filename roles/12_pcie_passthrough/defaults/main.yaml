@@ -1,0 +1,15 @@
+# PCIe passthrough configuration
+pcie_passthrough: # Blocklist drivers and specify device IDs for VFIO passthrough.
+  blocklist:
+    - radeon # Blacklist Radeon driver.
+    - nouveau # Blacklist Nouveau driver.
+    - nvidia* # Blacklist NVIDIA driver.
+    - i915 # Blacklist Intel integrated graphics driver.
+    - amdgpu # Blacklist AMD GPU driver.
+    - xe # Blacklist Xe graphics driver.
+  ids: # Device IDs for VFIO passthrough.
+    - 10de:1db6
+    - 10de:10f1
+  ids_gpu: # GPU device IDs for VFIO passthrough.
+    - 1002:67df
+    - 1002:aaf0

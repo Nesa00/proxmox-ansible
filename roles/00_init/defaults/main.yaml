@@ -1,0 +1,3 @@
+# Init role - most variables come from host_vars via vars_file
+initial_user: root # Initial user for the system.
+initial_password: "" # Initial user password.

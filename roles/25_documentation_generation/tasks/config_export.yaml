@@ -1,0 +1,219 @@
+- name: Export Proxmox configuration
+  when: export_proxmox_config | default(true)
+  block:
+    - name: Export Proxmox node configuration
+      ansible.builtin.shell: |
+        echo 'Proxmox Node Configuration'
+        echo '=========================='
+        pvenode config show 2>/dev/null
+        echo ''
+        echo 'Proxmox Version'
+        echo '==============='
+        pveversion
+        echo ''
+        echo 'Proxmox Subscription'
+        echo '===================='
+        pvesm status 2>/dev/null
+      register: proxmox_config
+      changed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+    - name: Export Proxmox cluster configuration
+      ansible.builtin.shell: |
+        echo 'Proxmox Cluster Configuration'
+        echo '============================'
+        pvecm status 2>/dev/null || echo 'Not in cluster'
+        echo ''
+        echo 'Cluster Config'
+        echo '=============='
+        cat /etc/pve/corosync.conf 2>/dev/null || echo 'No cluster config'
+      register: cluster_config
+      changed_when: false
+      failed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+    - name: Export Proxmox storage configuration
+      ansible.builtin.shell: |
+        echo 'Proxmox Storage Configuration'
+        echo '============================'
+        pvesm status 2>/dev/null
+        echo ''
+        echo 'Storage Details'
+        echo '=============='
+        for storage in $(pvesm status 2>/dev/null | awk 'NR>1 {print $1}'); do
+          echo "Storage: $storage"
+          pvesm status "$storage" 2>/dev/null
+          echo ''
+        done
+      register: storage_config
+      changed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+- name: Export network configuration
+  when: export_network_config | default(true)
+  block:
+    - name: Export network interfaces
+      ansible.builtin.shell: |
+        echo 'Network Configuration Export'
+        echo '==========================='
+        echo 'Network Interfaces:'
+        cat /etc/network/interfaces
+        echo ''
+        echo 'Network Status:'
+        ip -o addr show
+        echo ''
+        echo 'Routing Table:'
+        ip route show
+        echo ''
+        echo 'Bridge Status:'
+        brctl show 2>/dev/null || echo 'Bridge tools not available'
+      register: network_config_export
+      changed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+    - name: Export DNS configuration
+      ansible.builtin.shell: |
+        echo 'DNS Configuration'
+        echo '================='
+        cat /etc/resolv.conf
+        echo ''
+        echo "Hostname: $(hostname)"
+        echo ''
+        echo 'Hosts File:'
+        cat /etc/hosts
+      register: dns_config
+      changed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+    - name: Export ACME configuration
+      ansible.builtin.shell: |
+        echo 'ACME Configuration'
+        echo '==================='
+        echo 'ACME Plugin Status:'
+        pvenode acme plugin list 2>/dev/null || echo 'ACME plugin list not available'
+        echo ''
+        echo 'ACME Account Status:'
+        pvenode config show | grep -E "acme" 2>/dev/null || echo 'No ACME account configured'
+        echo ''
+        echo 'ACME Domain Configuration:'
+        pvenode config show | grep -E "acmedomain" 2>/dev/null || echo 'No ACME domain configured'
+        echo ''
+        echo 'ACME Certificates:'
+        pvenode acme cert list 2>/dev/null || echo 'No ACME certificates found'
+      register: acme_config
+      changed_when: false
+      failed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+- name: Export storage configuration
+  when: export_storage_config | default(true)
+  block:
+    - name: Export storage configuration
+      ansible.builtin.shell: |
+        echo 'Storage Configuration Export'
+        echo '==========================='
+        echo 'Disk Usage:'
+        df -h
+        echo ''
+        echo 'ZFS Pools:'
+        zpool list 2>/dev/null || echo 'ZFS not available'
+        echo ''
+        echo 'ZFS Datasets:'
+        zfs list 2>/dev/null || echo 'ZFS datasets not available'
+        echo ''
+        echo 'LVM Information:'
+        pvs 2>/dev/null || echo 'LVM not available'
+        vgs 2>/dev/null || echo 'No volume groups'
+        lvs 2>/dev/null || echo 'No logical volumes'
+        echo ''
+        echo 'Mount Points:'
+        mount | grep -v "tmpfs\|proc\|sysfs"
+      register: storage_export
+      changed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+    - name: Alias storage_config_export for template compatibility
+      ansible.builtin.set_fact:
+        storage_config_export: "{{ storage_export }}"
+      when: export_storage_config | default(true)
+
+- name: Export user configuration
+  when: export_user_config | default(true)
+  block:
+    - name: Export user configuration
+      ansible.builtin.shell: |
+        echo 'User Configuration Export'
+        echo '========================'
+        echo 'Current Users:'
+        who
+        echo ''
+        echo 'System Users:'
+        cat /etc/passwd | grep -E ":/bin/(bash|sh)"
+        echo ''
+        echo 'Proxmox Users:'
+        pveum user list 2>/dev/null || echo 'Proxmox users not available'
+        echo ''
+        echo 'Groups:'
+        cat /etc/group | grep -E "(sudo|wheel|admin)" || true
+        echo ''
+        echo 'SSH Keys:'
+        find /home -name "authorized_keys" -exec ls -la {} \; 2>/dev/null || echo 'No SSH keys found'
+      register: user_export
+      changed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+- name: Save configuration exports to files
+  block:
+    - name: Save Proxmox configuration export
+      ansible.builtin.copy:
+        dest: "{{ documentation_path }}/proxmox_config_export.txt"
+        content: |
+          {{ proxmox_config.stdout }}
+          
+          {{ cluster_config.stdout | default('Cluster configuration not available') }}
+          
+          {{ storage_config.stdout }}
+        mode: '0644'
+      when: export_proxmox_config | default(true) | default(true)
+
+    - name: Save network configuration export
+      ansible.builtin.copy:
+        dest: "{{ documentation_path }}/network_config_export.txt"
+        content: |
+          {{ network_config_export.stdout }}
+          
+          {{ dns_config.stdout }}
+          
+          {{ acme_config.stdout | default('ACME configuration not available') }}
+        mode: '0644'
+      when: export_network_config | default(true) | default(true)
+
+    - name: Save storage configuration export
+      ansible.builtin.copy:
+        dest: "{{ documentation_path }}/storage_config_export.txt"
+        content: "{{ storage_export.stdout }}"
+        mode: '0644'
+      when: export_storage_config | default(true)
+
+    - name: Save user configuration export
+      ansible.builtin.copy:
+        dest: "{{ documentation_path }}/user_config_export.txt"
+        content: "{{ user_export.stdout }}"
+        mode: '0644'
+      when: export_user_config | default(true) | default(true)

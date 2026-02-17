@@ -1,0 +1,5 @@
+# CPU performance configuration
+pstate_performance: true # Enable P-State performance tuning.
+amd_pstate: active # AMD P-State mode (e.g., active, guided).
+intel_pstate: active # Intel P-State mode (e.g., active, passive).
+scaling_governor: performance # CPU scaling governor (e.g., schedutil, performance, powersave). Please check available modes before use.

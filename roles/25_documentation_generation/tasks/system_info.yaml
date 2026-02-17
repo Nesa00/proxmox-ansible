@@ -1,0 +1,484 @@
+- name: Create documentation directory
+  ansible.builtin.file:
+    path: "{{ documentation_path }}"
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Gather service facts
+  ansible.builtin.service_facts:
+
+- name: Collect system information (plain text for reports)
+  when: collect_hardware_info | default(true)
+  block:
+    - name: Get CPU information
+      ansible.builtin.shell: |
+        echo 'CPU Information'
+        echo '==============='
+        echo "CPU Model: $(grep 'model name' /proc/cpuinfo | head -1 | cut -d: -f2 | xargs)"
+        echo "CPU Cores: $(nproc)"
+        echo "CPU Threads: $(grep -c processor /proc/cpuinfo)"
+        echo "CPU Vendor: $(grep 'vendor_id' /proc/cpuinfo | head -1 | cut -d: -f2 | xargs)"
+      register: cpu_info
+      changed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+    - name: Get memory information
+      ansible.builtin.shell: |
+        echo 'Memory Information'
+        echo '=================='
+        echo "Total RAM: $(free -h | grep Mem | awk '{print $2}')"
+        echo "Available RAM: $(free -h | grep Mem | awk '{print $7}')"
+        echo "Swap Total: $(free -h | grep Swap | awk '{print $2}')"
+      register: memory_info
+      changed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+    - name: Get disk information
+      ansible.builtin.shell: |
+        echo 'Disk Usage'
+        echo '=========='
+        df -h
+        echo ''
+        echo 'Disk Partitions'
+        echo '==============='
+        lsblk -f
+      register: disk_info
+      changed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+    - name: Get network interface information
+      ansible.builtin.shell: |
+        echo 'Network Interfaces'
+        echo '=================='
+        ip -o addr show | grep -E '^[0-9]+:'
+        echo ''
+        echo 'Routing Table'
+        echo '============='
+        ip route show
+      register: network_info
+      changed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+- name: Collect software information
+  when: collect_software_info | default(true)
+  block:
+    - name: Get Proxmox version
+      ansible.builtin.shell: |
+        echo 'Proxmox Version'
+        echo '==============='
+        pveversion
+      register: proxmox_version
+      changed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+    - name: Get system info
+      ansible.builtin.shell: |
+        echo 'System Information'
+        echo '=================='
+        echo "Installed Packages: $(dpkg -l | wc -l)"
+        echo "Kernel: $(uname -r)"
+        echo "Architecture: $(uname -m)"
+        echo "Hostname: $(hostname)"
+        echo "OS: $(grep PRETTY_NAME /etc/os-release | sed 's/PRETTY_NAME=//' | tr -d '\"')"
+      register: system_basic_info
+      changed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+    - name: Get system uptime
+      ansible.builtin.shell: |
+        echo 'System Uptime'
+        echo '============='
+        uptime
+        echo ''
+        echo 'Boot Time'
+        echo '========='
+        who -b
+      register: uptime
+      changed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+- name: Collect Proxmox specific information
+  when: collect_software_info | default(true)
+  block:
+    - name: Get Proxmox cluster status
+      ansible.builtin.shell: |
+        echo 'Proxmox Cluster Status'
+        echo '====================='
+        pvecm status 2>/dev/null || echo 'Not in cluster'
+      register: cluster_status
+      changed_when: false
+      failed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+    - name: Get Proxmox storage status
+      ansible.builtin.shell: |
+        echo 'Proxmox Storage Status'
+        echo '====================='
+        pvesm status
+      register: storage_status
+      changed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+    - name: Get ZFS pool status
+      ansible.builtin.shell: |
+        echo 'ZFS Pool Status'
+        echo '==============='
+        zpool list 2>/dev/null || echo 'ZFS information not available'
+        echo ''
+        echo 'ZFS Datasets'
+        echo '============'
+        zfs list 2>/dev/null || echo 'ZFS datasets not available'
+      register: zfs_status
+      changed_when: false
+      failed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+    - name: Get Proxmox VM list
+      ansible.builtin.shell: |
+        echo 'Virtual Machines'
+        echo '================'
+        qm list 2>/dev/null || echo 'No VMs found'
+      register: vm_list
+      changed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+    - name: Get Proxmox container list
+      ansible.builtin.shell: |
+        echo 'Containers'
+        echo '=========='
+        pct list 2>/dev/null || echo 'No containers found'
+      register: container_list
+      changed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+    - name: Get repository information
+      ansible.builtin.shell: |
+        echo 'Debian Repositories'
+        echo '=================='
+        cat /etc/apt/sources.list
+        echo ''
+        echo 'Proxmox Repositories'
+        echo '==================='
+        ls -la /etc/apt/sources.list.d/ | grep -E "(pve|proxmox)" || true
+      register: repository_info
+      changed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+    - name: Get DNS information
+      ansible.builtin.shell: |
+        echo 'DNS Configuration'
+        echo '================='
+        echo 'Current DNS Servers:'
+        cat /etc/resolv.conf
+        echo ''
+        echo "Hostname: $(hostname)"
+        echo "FQDN: $(hostname -f)"
+        echo "Domain: $(hostname -d)"
+        echo ''
+        echo 'Hosts File:'
+        cat /etc/hosts
+      register: dns_info
+      changed_when: false
+      failed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+    - name: Get ACME information
+      ansible.builtin.shell: |
+        echo 'ACME Configuration'
+        echo '=================='
+        echo 'ACME Plugin Status:'
+        pvenode acme plugin list 2>/dev/null || echo 'ACME plugin list not available'
+        echo ''
+        echo 'ACME Account Status:'
+        pvenode config show | grep -E "acme" 2>/dev/null || echo 'No ACME account configured'
+      register: acme_info
+      changed_when: false
+      failed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+    - name: Get time and NTP information
+      ansible.builtin.shell: |
+        echo 'Time and NTP Configuration'
+        echo '=========================='
+        echo "Current Time: $(date)"
+        echo "Timezone: $(timedatectl show --property=Timezone --value 2>/dev/null || echo 'N/A')"
+        echo "NTP Status: $(timedatectl show --property=NTP --value 2>/dev/null || echo 'N/A')"
+        echo "NTP Synchronized: $(timedatectl show --property=NTPUSync --value 2>/dev/null || echo 'N/A')"
+      register: time_info
+      changed_when: false
+      failed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+    - name: Get system processes and services
+      ansible.builtin.shell: |
+        echo 'System Processes and Services'
+        echo '============================'
+        echo 'Load Average:'
+        uptime
+        echo ''
+        echo 'Top Processes by CPU:'
+        ps aux --sort=-%cpu | head -10
+        echo ''
+        echo 'Top Processes by Memory:'
+        ps aux --sort=-%mem | head -10
+      register: processes_info
+      changed_when: false
+      failed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+    - name: Get system logs
+      ansible.builtin.shell: |
+        echo 'System Logs Information'
+        echo '======================='
+        echo 'Recent System Errors:'
+        journalctl -p err --since "1 hour ago" --no-pager 2>/dev/null | head -20 || echo 'No errors'
+        echo ''
+        echo 'Recent Kernel Messages:'
+        journalctl -k --since "1 hour ago" --no-pager 2>/dev/null | head -20 || echo 'No messages'
+      register: logs_info
+      changed_when: false
+      failed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+    - name: Get users and groups
+      ansible.builtin.shell: |
+        echo 'Users and Groups Information'
+        echo '============================'
+        echo 'Current Users:'
+        who
+        echo ''
+        echo 'Last Logins:'
+        last | head -10
+      register: users_info
+      changed_when: false
+      failed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+    - name: Get scheduled tasks
+      ansible.builtin.shell: |
+        echo 'Scheduled Tasks Information'
+        echo '=========================='
+        echo 'Cron Jobs (Root):'
+        crontab -l 2>/dev/null || echo 'No root cron jobs'
+        echo ''
+        echo 'Systemd Timers:'
+        systemctl list-timers --no-pager 2>/dev/null | head -20 || echo 'No timers'
+      register: cron_info
+      changed_when: false
+      failed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+    - name: Get kernel modules
+      ansible.builtin.shell: |
+        echo 'Kernel Modules Information'
+        echo '=========================='
+        echo 'Loaded Modules:'
+        lsmod | head -20
+        echo ''
+        echo 'Kernel Version Details:'
+        uname -a
+      register: modules_info
+      changed_when: false
+      failed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+    - name: Get network connections
+      ansible.builtin.shell: |
+        echo 'Network Connections and Routing'
+        echo '================================'
+        echo 'Active TCP Connections:'
+        ss -tuln | head -20
+        echo ''
+        echo 'Routing Table:'
+        ip route show
+      register: network_connections_info
+      changed_when: false
+      failed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+    - name: Get firewall and security
+      ansible.builtin.shell: |
+        echo 'Firewall and Security Information'
+        echo '=================================='
+        echo 'IPTables Rules:'
+        iptables -L -n -v 2>/dev/null | head -30 || echo 'IPTables not available'
+        echo ''
+        echo 'UFW Status:'
+        ufw status verbose 2>/dev/null || echo 'UFW not available'
+        echo ''
+        echo 'Fail2Ban Status:'
+        fail2ban-client status 2>/dev/null || echo 'Fail2Ban not available'
+      register: firewall_info
+      changed_when: false
+      failed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+    - name: Get storage detailed info
+      ansible.builtin.shell: |
+        echo 'Storage and Filesystem Detailed Information'
+        echo '==========================================='
+        echo 'LVM Information:'
+        pvs 2>/dev/null || echo 'LVM not available'
+        echo ''
+        echo 'RAID Status:'
+        cat /proc/mdstat 2>/dev/null || echo 'No RAID arrays'
+        echo ''
+        echo 'Mount Points:'
+        mount | grep -v "tmpfs\|proc\|sysfs" | head -20
+      register: storage_detailed_info
+      changed_when: false
+      failed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+    - name: Get performance metrics
+      ansible.builtin.shell: |
+        echo 'Performance Metrics Information'
+        echo '================================'
+        echo 'CPU Information:'
+        lscpu | grep -E "(Model name|CPU\(s\)|Thread|Core|Socket|Cache)" || true
+        echo ''
+        echo 'Memory Information:'
+        free -h
+        echo ''
+        echo 'System Load History:'
+        uptime
+      register: performance_info
+      changed_when: false
+      failed_when: false
+      environment:
+        TERM: dumb
+        NO_COLOR: 1
+
+- name: Save system information to files
+  block:
+    - name: Save CPU information
+      ansible.builtin.copy:
+        dest: "{{ documentation_path }}/system_cpu_info.txt"
+        content: "{{ cpu_info.stdout }}"
+        mode: '0644'
+      when: collect_hardware_info | default(true)
+
+    - name: Save memory information
+      ansible.builtin.copy:
+        dest: "{{ documentation_path }}/system_memory_info.txt"
+        content: "{{ memory_info.stdout }}"
+        mode: '0644'
+      when: collect_hardware_info | default(true)
+
+    - name: Save disk information
+      ansible.builtin.copy:
+        dest: "{{ documentation_path }}/system_disk_info.txt"
+        content: "{{ disk_info.stdout }}"
+        mode: '0644'
+      when: collect_hardware_info | default(true)
+
+    - name: Save network information
+      ansible.builtin.copy:
+        dest: "{{ documentation_path }}/system_network_info.txt"
+        content: "{{ network_info.stdout }}"
+        mode: '0644'
+      when: collect_hardware_info | default(true)
+
+    - name: Save software information
+      ansible.builtin.copy:
+        dest: "{{ documentation_path }}/system_software_info.txt"
+        content: |
+          {{ system_basic_info.stdout }}
+          
+          {{ uptime.stdout }}
+        mode: '0644'
+      when: collect_software_info | default(true)
+
+    - name: Save Proxmox information
+      ansible.builtin.copy:
+        dest: "{{ documentation_path }}/proxmox_info.txt"
+        content: |
+          {{ proxmox_version.stdout }}
+          
+          {{ cluster_status.stdout | default('Cluster information not available') }}
+          
+          {{ storage_status.stdout }}
+          
+          {{ zfs_status.stdout | default('ZFS information not available') }}
+          
+          {{ vm_list.stdout | default('VM information not available') }}
+          
+          {{ container_list.stdout | default('Container information not available') }}
+          
+          {{ repository_info.stdout }}
+          
+          {{ dns_info.stdout }}
+          
+          {{ acme_info.stdout }}
+          
+          {{ time_info.stdout }}
+          
+          {{ processes_info.stdout }}
+          
+          {{ logs_info.stdout }}
+          
+          {{ users_info.stdout }}
+          
+          {{ cron_info.stdout }}
+          
+          {{ modules_info.stdout }}
+          
+          {{ network_connections_info.stdout }}
+          
+          {{ firewall_info.stdout }}
+          
+          {{ storage_detailed_info.stdout }}
+          
+          {{ performance_info.stdout }}
+        mode: '0644'
+      when: collect_software_info | default(true)

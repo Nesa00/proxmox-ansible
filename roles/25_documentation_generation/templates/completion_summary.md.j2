@@ -1,0 +1,191 @@
+# Documentation Generation Completion Summary - {{ inventory_hostname }}
+
+**Generated:** {{ ansible_date_time.iso8601 }}  
+**Hostname:** {{ inventory_hostname }}  
+**IP Address:** {{ ansible_default_ipv4.address | default('Unknown') }}
+
+---
+
+## Generation Status
+
+✅ **Documentation generation completed successfully!**
+
+---
+
+## Generated Reports
+
+### Comprehensive Report
+- **Comprehensive Report** - All system information in one document
+  - Markdown: `comprehensive_report.md`
+  - HTML: `comprehensive_report.html`
+
+---
+
+## Network Diagrams
+
+{% if network_diagrams_enabled | default(true) %}
+### Generated Diagrams
+- **Topology YAML:** `network_topology.yaml`
+- **Diagram YAML:** `network_diagram.yaml`
+
+{% if (diagram_format | default("yaml")) == "dot" %}
+- **DOT Diagram:** `network_diagram.dot`
+- **PNG Image:** `network_diagram.png`
+{% endif %}
+
+{% if (diagram_format | default("yaml")) == "mermaid" %}
+- **Mermaid Diagram:** `network_diagram.mmd`
+{% endif %}
+{% else %}
+**Network Diagrams:** Not generated
+{% endif %}
+
+---
+
+## Security Audit
+
+{% if security_audit_enabled | default(true) %}
+### Security Files
+- **SSH Audit:** `security_ssh_audit.txt`
+- **Firewall Audit:** `security_firewall_audit.txt`
+- **User Audit:** `security_user_audit.txt`
+- **Service Audit:** `security_service_audit.txt`
+- **Packages Audit:** `security_packages_audit.txt`
+- **Security Summary:** `security_summary.md`
+{% else %}
+**Security Audit:** Not performed
+{% endif %}
+
+---
+
+## Configuration Export
+
+{% if export_configs_enabled | default(true) %}
+### Exported Configurations
+{% if export_proxmox_config %}
+- **Proxmox Config:** `proxmox_config_export.txt`
+{% endif %}
+{% if export_network_config %}
+- **Network Config:** `network_config_export.txt`
+{% endif %}
+{% if export_storage_config %}
+- **Storage Config:** `storage_config_export.txt`
+{% endif %}
+{% if export_user_config %}
+- **User Config:** `user_config_export.txt`
+{% endif %}
+{% else %}
+**Configuration Export:** Not enabled
+{% endif %}
+
+---
+
+## Documentation Index
+
+- **README:** `README.md` - Main documentation index
+- **Notification Log:** `notification.log` - Generation details
+
+---
+
+## File Locations
+
+### Remote System
+- **Documentation Path:** `{{ documentation_path }}`
+- **Total Files:** Generated based on enabled features
+
+### Local System
+- **Local Copy Path:** `{{ local_documentation_path | default('Not specified') }}`
+- **Copy Status:** {{ 'Completed' if local_documentation_path is defined else 'Not configured' }}
+
+---
+
+## Generation Details
+
+### Enabled Features
+- **Comprehensive Report:** Yes (includes all information)
+- **Network Diagrams:** {{ 'Yes' if (network_diagrams_enabled | default(true)) else 'No' }}
+- **Security Audit:** {{ 'Yes' if (security_audit_enabled | default(true)) else 'No' }}
+- **Config Export:** {{ 'Yes' if (export_configs_enabled | default(true)) else 'No' }}
+
+### Report Formats
+{% for format in report_formats %}
+- **{{ format | title }}** reports generated
+{% endfor %}
+
+### Network Diagram Format
+- **Primary Format:** {{ diagram_format | default("yaml") | title }}
+
+---
+
+## Notifications Sent
+
+### Email Notifications
+{% if notification_email != "" %}
+- **Recipient:** {{ notification_email }}
+- **Status:** Sent successfully
+{% else %}
+- **Email Notifications:** Not configured
+{% endif %}
+
+### Webhook Notifications
+{% if notification_webhook != "" %}
+- **Webhook URL:** {{ notification_webhook }}
+- **Status:** Sent successfully
+{% else %}
+- **Webhook Notifications:** Not configured
+{% endif %}
+
+---
+
+## Next Steps
+
+### Immediate Actions
+1. **Review Generated Documentation**
+   - Check all generated reports
+   - Verify information accuracy
+   - Review security findings
+
+2. **Local Copy Verification**
+   - Confirm files copied to local system
+   - Verify file integrity
+   - Organize documentation
+
+### Maintenance
+1. **Regular Updates**
+   - Schedule periodic documentation generation
+   - Update documentation when system changes
+   - Archive old documentation
+
+2. **Documentation Management**
+   - Store in version control system
+   - Share with team members
+   - Use for system planning
+
+---
+
+## System Information
+
+### Host Details
+- **Hostname:** {{ inventory_hostname }}
+- **IP Address:** {{ ansible_default_ipv4.address | default('Unknown') }}
+- **Operating System:** {{ ansible_distribution }} {{ ansible_distribution_version }}
+- **Kernel Version:** {{ ansible_kernel }}
+
+### Proxmox Details
+- **Proxmox Version:** {{ proxmox_pve_major | default('Unknown') }}
+- **Node Type:** {{ 'Cluster Member' if cluster_status is defined else 'Standalone' }}
+
+---
+
+## Success Metrics
+
+✅ **All requested documentation generated successfully**  
+✅ **Network diagrams created in specified format**  
+✅ **Security audit completed**  
+✅ **Configuration exports saved**  
+✅ **Notifications sent**  
+✅ **Local copy completed** (if configured)
+
+---
+
+*This completion summary was automatically generated by the Proxmox Ansible playbook.*

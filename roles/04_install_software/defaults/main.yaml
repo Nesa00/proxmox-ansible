@@ -1,0 +1,9 @@
+# Software installation and system update
+update_system_now: false # Update the system immediately after completing all playbooks.
+install_packages: "" # Specify additional packages to install (e.g., "jq nano").
+uninstall_packages: "" # Specify packages to uninstall.
+apparmor_disable: false # Disable AppArmor.
+fail2ban_enable: false # Install and enable Fail2Ban for security.
+nginx_enable: false # Install and enable Nginx.
+web_show_temperatures: false # Display hardware temperatures in the Proxmox web interface.
+install_stresstest_software: false # Install stress-testing tools like stress-ng.

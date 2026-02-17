@@ -1,0 +1,172 @@
+# Proxmox Documentation Index
+
+**Generated:** {{ ansible_date_time.iso8601 }}  
+**Hostname:** {{ inventory_hostname }}  
+**IP Address:** {{ ansible_default_ipv4.address | default('Unknown') }}
+
+---
+
+## 📋 Available Reports
+
+### Comprehensive Report
+- **[Comprehensive Report (Markdown)](comprehensive_report.md)** - Full system documentation
+- **[Comprehensive Report (HTML)](comprehensive_report.html)** - Full system documentation (HTML)
+
+---
+
+## 🔧 Configuration Exports
+
+{% if export_configs_enabled | default(true) %}
+### Proxmox Configuration
+- **[Proxmox Config](proxmox_config_export.txt)** - Complete Proxmox configuration export
+- **[Network Config](network_config_export.txt)** - Network configuration export
+- **[Storage Config](storage_config_export.txt)** - Storage configuration export
+- **[User Config](user_config_export.txt)** - User and permission configuration
+{% endif %}
+
+---
+
+## 🌐 Network Diagrams
+
+{% if network_diagrams_enabled | default(true) %}
+### Network Topology
+- **[Network Topology](network_topology.yaml)** - YAML format network topology
+- **[Network Diagram](network_diagram.{{ diagram_format | default('yaml') }})** - Network diagram in {{ diagram_format | default('yaml') }} format
+- **[Network Config](network_config.txt)** - Detailed network configuration
+
+{% if include_vm_networks | default(true) %}
+- **[VM Networks](vm_network_info.txt)** - Virtual machine network configuration
+{% endif %}
+
+{% if include_storage_networks | default(true) %}
+- **[Storage Networks](storage_network_info.txt)** - Storage network configuration
+{% endif %}
+{% endif %}
+
+---
+
+## 🔒 Security Information
+
+{% if security_audit_enabled | default(true) %}
+### Security Audits
+- **[SSH Audit](security_ssh_audit.txt)** - SSH configuration security audit
+- **[Firewall Audit](security_firewall_audit.txt)** - Firewall rules audit
+- **[User Audit](security_user_audit.txt)** - User permissions audit
+- **[Service Audit](security_service_audit.txt)** - Critical services audit
+- **[Packages Audit](security_packages_audit.txt)** - Security packages audit
+
+### Security Reports
+- **[Security Summary](security_summary.md)** - Security audit summary
+{% endif %}
+
+---
+
+## 📊 Raw System Information
+
+### Hardware Information
+- **[CPU Info](system_cpu_info.txt)** - Detailed CPU information
+- **[Memory Info](system_memory_info.txt)** - Memory and swap information
+- **[Disk Info](system_disk_info.txt)** - Disk and partition information
+- **[Network Info](system_network_info.txt)** - Network interface information
+
+### Software Information
+- **[Software Info](system_software_info.txt)** - Operating system and software information
+- **[Proxmox Info](proxmox_info.txt)** - Proxmox-specific information
+
+---
+
+## 📁 Documentation Structure
+
+```
+{{ documentation_path }}/
+├── README.md                           # This index file
+├── comprehensive_report.md             # Comprehensive report (Markdown)
+├── comprehensive_report.html           # Comprehensive report (HTML)
+{% if export_configs_enabled | default(true) %}
+├── proxmox_config_export.txt           # Proxmox configuration
+├── network_config_export.txt           # Network configuration
+├── storage_config_export.txt           # Storage configuration
+└── user_config_export.txt              # User configuration
+{% endif %}
+{% if network_diagrams_enabled | default(true) %}
+├── network_topology.yaml               # Network topology
+├── network_diagram.{{ diagram_format | default('yaml') }} # Network diagram
+├── network_config.txt                  # Network configuration
+{% if include_vm_networks | default(true) %}
+├── vm_network_info.txt                 # VM network information
+{% endif %}
+{% if include_storage_networks | default(true) %}
+└── storage_network_info.txt            # Storage network information
+{% endif %}
+{% endif %}
+{% if security_audit_enabled | default(true) %}
+├── security_summary.md                 # Security summary
+├── security_ssh_audit.txt              # SSH security audit
+├── security_firewall_audit.txt         # Firewall security audit
+├── security_user_audit.txt             # User security audit
+├── security_service_audit.txt          # Service security audit
+└── security_packages_audit.txt         # Security packages audit
+{% endif %}
+├── system_cpu_info.txt                 # CPU information
+├── system_memory_info.txt              # Memory information
+├── system_disk_info.txt                # Disk information
+├── system_network_info.txt             # Network information
+├── system_software_info.txt            # Software information
+└── proxmox_info.txt                    # Proxmox information
+```
+
+---
+
+## 🚀 Usage Instructions
+
+### Viewing Reports
+1. **Markdown Reports**: Open `.md` files in any Markdown viewer or editor
+2. **HTML Reports**: Open `.html` files in a web browser
+3. **YAML Reports**: Use YAML viewers or text editors
+4. **Text Reports**: View in any text editor or terminal
+
+### Network Diagrams
+- **YAML**: Human-readable network topology
+- **DOT**: Use Graphviz to generate images
+- **Mermaid**: Use Mermaid renderers for visualization
+
+### Configuration Exports
+- Use configuration exports for backup purposes
+- Compare configurations between different systems
+- Document changes and modifications
+
+---
+
+## 📅 Maintenance
+
+### Automatic Cleanup
+- **Retention Period:** {{ reports_retention_days }} days
+- **Cleanup Log:** [cleanup.log](cleanup.log)
+- **Cleanup Summary:** [cleanup_summary.md](cleanup_summary.md)
+
+### Manual Cleanup
+- Remove old reports manually if needed
+- Archive important documentation
+- Update retention settings in variables
+
+---
+
+## 🔗 Integration
+
+### Notifications
+{% if notify_on_completion | default(false) %}
+- **Email Notifications:** {{ 'Enabled' if notification_email != "" else 'Disabled' }}
+- **Webhook Notifications:** {{ 'Enabled' if notification_webhook != "" else 'Disabled' }}
+- **Notification Log:** [notification.log](notification.log)
+{% else %}
+- **Notifications:** Disabled
+{% endif %}
+
+### Local Copy
+- **Local Path:** {{ local_documentation_path | default('Not specified') }}
+- **Automatic Sync:** Enabled
+
+---
+
+*This documentation was automatically generated by the Proxmox Ansible playbook.*  
+*Last updated: {{ ansible_date_time.iso8601 }}*

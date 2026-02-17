@@ -1,7 +1,7 @@
 ---
 - name: Download CA certificate
   ansible.builtin.shell: wget --no-check-certificate "{{ ca_certificate_url }}" -O "/tmp/{{ ca_certificate_name }}"
-  when: 
+  when:
     - certificates_configure | bool
     - ca_certificate_url is defined
     - ca_certificate_url | length > 0
@@ -14,7 +14,7 @@
     dest: "/usr/local/share/ca-certificates/{{ ca_certificate_name }}"
     mode: '0644'
     remote_src: true
-  when: 
+  when:
     - certificates_configure | bool
     - ca_certificate_url is defined
     - ca_certificate_url | length > 0
@@ -25,7 +25,7 @@
 
 - name: Update CA certificates
   ansible.builtin.command: update-ca-certificates
-  when: 
+  when:
     - certificates_configure | bool
     - (ca_certificate_url is defined and ca_certificate_url | length > 0 and not ca_certificate_url.startswith('#')) or
       (custom_certs_dir is defined and custom_certs_dir | length > 0)
@@ -35,7 +35,7 @@
   ansible.builtin.file:
     path: "/tmp/{{ ca_certificate_name }}"
     state: absent
-  when: 
+  when:
     - certificates_configure | bool
     - ca_certificate_url is defined
     - ca_certificate_url | length > 0
@@ -54,7 +54,7 @@
     dest: "/tmp/"
     mode: '0644'
     remote_src: false
-  when: 
+  when:
     - certificates_configure | bool
     - custom_certs_dir_stat.stat.exists
     - custom_certs_dir_stat.stat.isdir | default(false)
@@ -65,14 +65,14 @@
     dest: "/usr/local/share/ca-certificates/"
     mode: '0644'
     remote_src: true
-  when: 
+  when:
     - certificates_configure | bool
     - custom_certs_dir_stat.stat.exists
     - custom_certs_dir_stat.stat.isdir | default(false)
 
 - name: Update CA certificates after custom certs
   ansible.builtin.command: update-ca-certificates
-  when: 
+  when:
     - certificates_configure | bool
     - custom_certs_dir_stat.stat.exists
     - custom_certs_dir_stat.stat.isdir | default(false)

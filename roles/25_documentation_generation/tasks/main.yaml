@@ -1,0 +1,35 @@
+- name: Start documentation generation with Dracula colors
+  ansible.builtin.debug:
+    msg: "Starting optimized documentation generation with Dracula theme colors"
+
+- name: Include optimized system information collection
+  ansible.builtin.include_tasks: system_info.yaml
+  when: documentation_generation_enabled and (system_info_collection | default(true))
+
+- name: Include network diagrams
+  ansible.builtin.include_tasks: network_diagrams.yaml
+  when: documentation_generation_enabled and (network_diagrams_enabled | default(true))
+
+- name: Include security audit
+  ansible.builtin.include_tasks: security_audit.yaml
+  when: documentation_generation_enabled and (security_audit_enabled | default(true))
+
+- name: Include optimized configuration export
+  ansible.builtin.include_tasks: config_export.yaml
+  when: documentation_generation_enabled and (export_configs_enabled | default(true))
+
+- name: Include report generation
+  ansible.builtin.include_tasks: report_generation.yaml
+  when: documentation_generation_enabled
+
+- name: Include cleanup tasks
+  ansible.builtin.include_tasks: cleanup.yaml
+  when: documentation_generation_enabled and (cleanup_old_reports | default(true))
+
+- name: Include notification tasks
+  ansible.builtin.include_tasks: notifications.yaml
+  when: documentation_generation_enabled and (notify_on_completion | default(false))
+
+- name: Documentation generation completed
+  ansible.builtin.debug:
+    msg: "Optimized documentation generation with Dracula colors completed successfully!"
